@@ -12,22 +12,31 @@ import com.jobik.gameoflife.screens.settings.SettingsScreen
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    startDestination: String = NavigationItem.Game.route,
+    startDestination: Screen = Screen.Game,
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        composable(NavigationItem.Onboarding.route) {
+        composable<Screen.Onboarding>() {
             OnboardingScreen(navController)
         }
-        composable(NavigationItem.Game.route) {
+        composable<Screen.Game>(
+            enterTransition = { NavigationTransition().mainScreenEnterTransition(this) },
+            exitTransition = { NavigationTransition().mainScreenExitTransition(this) })
+        {
             GameScreen()
         }
-        composable(NavigationItem.Information.route) {
+        composable<Screen.Information>(
+            enterTransition = { NavigationTransition().mainScreenEnterTransition(this) },
+            exitTransition = { NavigationTransition().mainScreenExitTransition(this) })
+        {
             InformationScreen()
         }
-        composable(NavigationItem.Settings.route) {
+        composable<Screen.Settings>(
+            enterTransition = { NavigationTransition().mainScreenEnterTransition(this) },
+            exitTransition = { NavigationTransition().mainScreenExitTransition(this) })
+        {
             SettingsScreen(navController)
         }
     }

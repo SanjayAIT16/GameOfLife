@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,13 +29,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.jobik.gameoflife.BuildConfig
 import com.jobik.gameoflife.R
 import com.jobik.gameoflife.navigation.AppNavHost
-import com.jobik.gameoflife.navigation.NavigationHelpers
-import com.jobik.gameoflife.navigation.NavigationHelpers.Companion.canNavigate
+import com.jobik.gameoflife.navigation.NavigationHelper
+import com.jobik.gameoflife.navigation.NavigationHelper.Companion.canNavigate
 import com.jobik.gameoflife.navigation.Screen
 import com.jobik.gameoflife.ui.helpers.BottomWindowInsetsSpacer
 import com.jobik.gameoflife.ui.helpers.TopWindowInsetsSpacer
@@ -81,7 +83,10 @@ object DrawerParams {
 }
 
 @Composable
-fun LayoutWithModalDrawerSheet(navController: NavHostController, modalDrawer: ModalDrawer = ModalDrawerImplementation) {
+fun LayoutWithModalDrawerSheet(
+    navController: NavHostController,
+    modalDrawer: ModalDrawer = ModalDrawerImplementation
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -100,7 +105,7 @@ fun LayoutWithModalDrawerSheet(navController: NavHostController, modalDrawer: Mo
     ) {
         AppNavHost(
             navController = navController,
-            startDestination = NavigationHelpers.findStartDestination(context = context)
+            startDestination = NavigationHelper.findStartDestination(context = context)
         )
     }
 }
@@ -113,7 +118,6 @@ fun AppDrawerContent(
     navController: NavHostController,
     drawerState: DrawerState,
 ) {
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route ?: ""
     val coroutineScope = rememberCoroutineScope()
 
     ModalDrawerSheet(windowInsets = WindowInsets.ime) {
@@ -132,8 +136,9 @@ fun AppDrawerContent(
                     modifier = Modifier
                         .padding(vertical = 20.dp)
                         .size(120.dp),
-                    painter = painterResource(id = R.drawable.icon_for_tint),
+                    painter = painterResource(id = R.drawable.ic_app),
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                    contentScale = ContentScale.Fit,
                     contentDescription = "Main app icon"
                 )
                 Text(
@@ -155,16 +160,20 @@ fun AppDrawerContent(
                             title = button.title,
                             contentDescription = button.description,
                             icon = button.icon,
-                            isActive = button.route.name == currentRoute,
+                            isActive = navController.currentDestination?.hierarchy?.any {
+                                it.hasRoute(button.route::class)
+                            } == true,
                             onClick = {
                                 coroutineScope.launch {
                                     drawerState.close()
                                 }
-                                if (button.route.name == currentRoute) return@AppDrawerItem
+                                if (navController.currentDestination?.hierarchy?.any {
+                                        it.hasRoute(button.route::class)
+                                    } == true) return@AppDrawerItem
                                 if (navController.canNavigate().not()) return@AppDrawerItem
-                                navController.navigate(button.route.name) {
+                                navController.navigate(button.route) {
                                     // pops the route to root and places new screen
-                                    popUpTo(button.route.name)
+                                    popUpTo(button.route)
                                 }
                             }
                         )
@@ -198,12 +207,19 @@ fun AppDrawerItem(
     isActive: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColorValue = if (isActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
-    val backgroundColor by animateColorAsState(targetValue = backgroundColorValue, label = "backgroundColor")
+    val backgroundColorValue =
+        if (isActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+    val backgroundColor by animateColorAsState(
+        targetValue = backgroundColorValue,
+        label = "backgroundColor"
+    )
 
     val contentColorValue =
         if (isActive) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onBackground
-    val contentColor by animateColorAsState(targetValue = contentColorValue, label = "backgroundColor")
+    val contentColor by animateColorAsState(
+        targetValue = contentColorValue,
+        label = "backgroundColor"
+    )
 
     Surface(
         color = backgroundColor,

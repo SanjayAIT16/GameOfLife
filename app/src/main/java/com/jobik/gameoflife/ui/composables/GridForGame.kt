@@ -43,15 +43,17 @@ val DeadEmojis = listOf(
     "\uD83D\uDC80",
 )
 
+const val DefaultGameUnitSize = 20
+const val DefaultGameGapWidth = 1
+
 @Composable
 fun GridForGame(
     viewModel: GameScreenViewModel,
 ) {
     val state = viewModel.states.value
-    val cellSize by remember(state.scale) { mutableStateOf((20 * state.scale).dp) }
+    val cellSize by remember(state.gameSettings.scale) { mutableStateOf((DefaultGameUnitSize * state.gameSettings.scale).dp) }
     val cellSizePx = with(LocalDensity.current) { cellSize.toPx() }
-    val cellSpacing = 1.dp
-    val cellSpacingPx = with(LocalDensity.current) { cellSpacing.toPx() }
+    val cellSpacingPx = with(LocalDensity.current) { DefaultGameGapWidth.dp.toPx() }
     val cellEmojiUnit by remember(state.currentStep) {
         mutableStateOf(
             Array(state.currentStep.size) { row ->
@@ -65,12 +67,14 @@ fun GridForGame(
             })
     }
 
-    val unitColor = MaterialTheme.colorScheme.primary
+    val aliveUnitColor = MaterialTheme.colorScheme.primary
+    val deadUnitColor = MaterialTheme.colorScheme.error
+
+    val showDead = viewModel.states.value.gameSettings.showDead
 
     BoxWithConstraints {
         val fieldWidth = with(LocalDensity.current) { maxWidth.toPx() }
-        val gapWidth = with(LocalDensity.current) { 1.dp.toPx() }
-
+        val gapWidth = with(LocalDensity.current) { DefaultGameGapWidth.dp.toPx() }
 
         LaunchedEffect(cellSize) {
             val count = fieldWidth / (cellSizePx + gapWidth)
@@ -111,7 +115,7 @@ fun GridForGame(
                 for (y in 0 until state.currentStep.first().size) {
                     val cell = state.currentStep[x][y]
 
-                    if (state.emojiEnabled) {
+                    if (state.gameSettings.emojiEnabled) {
                         EmojiUnit(
                             emoji = cellEmojiUnit[x][y],
                             cellSizePx = cellSizePx,
@@ -124,7 +128,7 @@ fun GridForGame(
                     } else {
                         if (cell == GameOfLifeUnitState.Alive) {
                             CircularUnit(
-                                unitColor = unitColor,
+                                unitColor = aliveUnitColor,
                                 offsetX = offsetX,
                                 x = x,
                                 cellSizePx = cellSizePx,
@@ -132,6 +136,18 @@ fun GridForGame(
                                 offsetY = offsetY,
                                 y = y
                             )
+                        } else {
+                            if (showDead && cell == GameOfLifeUnitState.Dead) {
+                                CircularUnit(
+                                    unitColor = deadUnitColor,
+                                    offsetX = offsetX,
+                                    x = x,
+                                    cellSizePx = cellSizePx,
+                                    cellSpacingPx = cellSpacingPx,
+                                    offsetY = offsetY,
+                                    y = y
+                                )
+                            }
                         }
                     }
                 }

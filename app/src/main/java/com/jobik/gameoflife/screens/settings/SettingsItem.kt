@@ -1,5 +1,6 @@
 package com.jobik.gameoflife.screens.settings
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -15,7 +16,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsItem(
     icon: ImageVector?,
-    text: String,
+    title: String,
+    description: String? = null,
     action: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
@@ -24,25 +26,38 @@ fun SettingsItem(
             .clickable(onClick = onClick)
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
-            .height(60.dp),
+            .heightIn(min = 60.dp)
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-    )
-    {
+    ) {
+        AnimatedContent(icon, label = "") {
+            if (it != null) {
+                Icon(
+                    imageVector = it,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
         if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
             Spacer(modifier = Modifier.width(20.dp))
         }
-        Text(
-            modifier = Modifier.weight(1f),
-            text = text,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+            Text(
+                text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (!description.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f)
+                )
+            }
+        }
         if (action != null) {
             Spacer(modifier = Modifier.width(20.dp))
             Row(

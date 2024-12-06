@@ -3,6 +3,7 @@ package com.jobik.gameoflife.gameOfLife
 import androidx.annotation.Keep
 import com.jobik.gameoflife.helpers.ArrayHelper
 import com.jobik.gameoflife.gameOfLife.GameOfLife.Companion.GameOfLifeUnitState
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 
@@ -17,10 +18,12 @@ class GameOfLife {
 
         @Keep
         enum class GameOfLifeResult {
+            Loop,
             StableCombination,
             NoOneSurvived,
         }
 
+        @Serializable
         data class GameOfLifeStepSettings(
             val neighborsForReviving: Set<Int> = setOf(3),
             val neighborsForAlive: Set<Int> = setOf(2, 3),
@@ -56,7 +59,8 @@ class GameOfLife {
             val newState = cloneGameState(currentState)
             for (row in currentState.indices) {
                 for (col in currentState[row].indices) {
-                    val numberOfNeighbors = getNumberOfNeighbors(list = currentState, row = row, col = col)
+                    val numberOfNeighbors =
+                        getNumberOfNeighbors(list = currentState, row = row, col = col)
                     if (newState[row][col] == GameOfLifeUnitState.Alive && numberOfNeighbors !in settings.neighborsForAlive) {
                         newState[row][col] = GameOfLifeUnitState.Dead
                     } else if (newState[row][col] != GameOfLifeUnitState.Alive && numberOfNeighbors in settings.neighborsForReviving) {
